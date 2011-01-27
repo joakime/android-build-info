@@ -5,14 +5,18 @@ import java.util.List;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ListView;
 
 public class BuildInfoActivity extends Activity {
+    private static final int SHARE_ID = Menu.FIRST;
     private InfoModel model;
 
     @Override
@@ -38,6 +42,30 @@ public class BuildInfoActivity extends Activity {
         ListView list = (ListView) findViewById(R.id.list);
         InfoModelAdapter adapter = new InfoModelAdapter(getLayoutInflater(), model);
         list.setAdapter(adapter);
+    }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        boolean ret = super.onCreateOptionsMenu(menu);
+        MenuItem item = menu.add(0, SHARE_ID, 0, R.string.share_menu);
+        item.setIcon(android.R.drawable.ic_menu_share);
+        return ret;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId())
+        {
+        case SHARE_ID:
+            Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Android Info");
+            shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, model.asText());
+
+            startActivity(Intent.createChooser(shareIntent, "Share Android Info Details"));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void addSensorInfo(String label, int sensorType) {
