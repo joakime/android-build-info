@@ -46,8 +46,8 @@ public class BuildInfoActivity extends Activity {
         SensorManager smgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> sensors = smgr.getSensorList(sensorType);
         int len = sensors.size();
-        if(len < 0) {
-            model.addDetail("Not Present", "No hardware specific sensor of this type");
+        if(len < 1) {
+            model.addDetail("Hardware Not Present", "");
             return;
         }
         String prefix;
