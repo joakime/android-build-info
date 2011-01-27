@@ -1,0 +1,6 @@
+
+    <resources>
+        <color name="header">#ffA4C639</color>
+        <color name="key">#ff888888</color>
+        <color name="value">#ff000000</color>
+    </resources>

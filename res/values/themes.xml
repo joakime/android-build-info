@@ -1,0 +1,4 @@
+
+    <resources>
+        <style name="Theme.Main" parent="android:Theme.Light"></style>
+    </resources>
