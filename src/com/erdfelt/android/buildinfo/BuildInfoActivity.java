@@ -7,7 +7,11 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Resources;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Build;
@@ -65,7 +69,28 @@ public class BuildInfoActivity extends Activity {
         case SHARE_ID:
             Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
             shareIntent.setType("text/plain");
-            shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Android Info");
+            
+            PackageManager pm = getPackageManager();
+            Resources resources = getResources();
+            
+            StringBuilder subject = new StringBuilder();
+            try {
+                ApplicationInfo ai = pm.getApplicationInfo(getPackageName(), 0);
+                subject.append(pm.getApplicationLabel(ai));
+            } catch (NameNotFoundException e) {
+                Log.w(TAG, "Unable to find name of application", e);
+                subject.append(resources.getString(R.string.app_name));
+            }
+            
+            try {
+                PackageInfo pi = pm.getPackageInfo(getPackageName(), 0);
+                subject.append(" ").append(pi.versionName);
+            } catch (NameNotFoundException e) {
+                Log.w(TAG, "Unable to find pacakge info", e);
+                subject.append(" - (Unknown Version)");
+            }
+            
+            shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject.toString());
             shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, model.asText());
 
             startActivity(Intent.createChooser(shareIntent, "Share Android Info Details"));
