@@ -1,7 +1,13 @@
 package com.erdfelt.android.buildinfo;
 
 import java.lang.reflect.Field;
+import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeMap;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -40,6 +46,7 @@ public class BuildInfoActivity extends Activity {
         addSystemInfo();
         addDisplayInfo();
         addTelephonyInfo();
+        addSystemProperties();
 
         addSensorInfo("Accelerometer", Sensor.TYPE_ACCELEROMETER);
         addSensorInfo("Gyroscope", Sensor.TYPE_GYROSCOPE);
@@ -53,6 +60,38 @@ public class BuildInfoActivity extends Activity {
         ListView list = (ListView) findViewById(R.id.list);
         InfoModelAdapter adapter = new InfoModelAdapter(getLayoutInflater(), model);
         list.setAdapter(adapter);
+    }
+
+    private void addSystemProperties() {
+        model.addHeader("System Properties");
+
+        Set<String> excluded = new HashSet<String>();
+        // Noisy / Pointless
+        excluded.add("line.separator");
+        excluded.add("file.separator");
+        excluded.add("path.separator");
+        // Java Standard Properties not supported on android.
+        excluded.add("java.compiler");
+        excluded.add("java.ext.dirs");
+        excluded.add("user.home");
+        excluded.add("user.name");
+
+        Properties props = System.getProperties();
+        Map<String, String> sorted = new TreeMap<String, String>();
+        @SuppressWarnings("unchecked")
+        Enumeration<String> names = (Enumeration<String>) props.propertyNames();
+        String name;
+        while (names.hasMoreElements()) {
+            name = names.nextElement();
+            if (excluded.contains(name)) {
+                continue; // skip (its excluded)
+            }
+            sorted.put(name, props.getProperty(name));
+        }
+
+        for (Map.Entry<String, String> entry : sorted.entrySet()) {
+            model.addDetail(entry.getKey(), entry.getValue());
+        }
     }
 
     @Override
@@ -69,10 +108,10 @@ public class BuildInfoActivity extends Activity {
         case SHARE_ID:
             Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
             shareIntent.setType("text/plain");
-            
+
             PackageManager pm = getPackageManager();
             Resources resources = getResources();
-            
+
             StringBuilder subject = new StringBuilder();
             try {
                 ApplicationInfo ai = pm.getApplicationInfo(getPackageName(), 0);
@@ -81,7 +120,7 @@ public class BuildInfoActivity extends Activity {
                 Log.w(TAG, "Unable to find name of application", e);
                 subject.append(resources.getString(R.string.app_name));
             }
-            
+
             try {
                 PackageInfo pi = pm.getPackageInfo(getPackageName(), 0);
                 subject.append(" ").append(pi.versionName);
@@ -89,7 +128,7 @@ public class BuildInfoActivity extends Activity {
                 Log.w(TAG, "Unable to find pacakge info", e);
                 subject.append(" - (Unknown Version)");
             }
-            
+
             shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject.toString());
             shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, model.asText());
 
@@ -122,69 +161,132 @@ public class BuildInfoActivity extends Activity {
             model.add(new InfoDetail(prefix + "maximum-range", sensor.getMaximumRange()));
         }
     }
-    
+
     private void addTelephonyInfo() {
         model.addHeader("Telephony");
 
         TelephonyManager tphony = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
         String callstate = "Unknown";
-        switch(tphony.getCallState()) {
-        case TelephonyManager.CALL_STATE_IDLE: callstate = "Idle"; break;
-        case TelephonyManager.CALL_STATE_OFFHOOK: callstate = "Off-Hook"; break;
-        case TelephonyManager.CALL_STATE_RINGING: callstate = "Ringing"; break;
+        switch (tphony.getCallState()) {
+        case TelephonyManager.CALL_STATE_IDLE:
+            callstate = "Idle";
+            break;
+        case TelephonyManager.CALL_STATE_OFFHOOK:
+            callstate = "Off-Hook";
+            break;
+        case TelephonyManager.CALL_STATE_RINGING:
+            callstate = "Ringing";
+            break;
         }
 
-        
         String dataactivity = "Unknown";
-        switch(tphony.getDataActivity()) {
-        case TelephonyManager.DATA_ACTIVITY_DORMANT: dataactivity = "Dormant"; break;
-        case TelephonyManager.DATA_ACTIVITY_IN: dataactivity = "In"; break;
-        case TelephonyManager.DATA_ACTIVITY_INOUT: dataactivity = "In-Out"; break;
-        case TelephonyManager.DATA_ACTIVITY_NONE: dataactivity = "None"; break;
-        case TelephonyManager.DATA_ACTIVITY_OUT: dataactivity = "Out"; break;
+        switch (tphony.getDataActivity()) {
+        case TelephonyManager.DATA_ACTIVITY_DORMANT:
+            dataactivity = "Dormant";
+            break;
+        case TelephonyManager.DATA_ACTIVITY_IN:
+            dataactivity = "In";
+            break;
+        case TelephonyManager.DATA_ACTIVITY_INOUT:
+            dataactivity = "In-Out";
+            break;
+        case TelephonyManager.DATA_ACTIVITY_NONE:
+            dataactivity = "None";
+            break;
+        case TelephonyManager.DATA_ACTIVITY_OUT:
+            dataactivity = "Out";
+            break;
         }
-        
+
         String datastate = "Unknown";
-        switch(tphony.getDataState()) {
-        case TelephonyManager.DATA_CONNECTED: datastate = "Connected"; break;
-        case TelephonyManager.DATA_CONNECTING: datastate = "Connecting"; break;
-        case TelephonyManager.DATA_DISCONNECTED: datastate = "Disconnected"; break;
-        case TelephonyManager.DATA_SUSPENDED: datastate = "Suspended"; break;
+        switch (tphony.getDataState()) {
+        case TelephonyManager.DATA_CONNECTED:
+            datastate = "Connected";
+            break;
+        case TelephonyManager.DATA_CONNECTING:
+            datastate = "Connecting";
+            break;
+        case TelephonyManager.DATA_DISCONNECTED:
+            datastate = "Disconnected";
+            break;
+        case TelephonyManager.DATA_SUSPENDED:
+            datastate = "Suspended";
+            break;
         }
-        
+
         String networktype = "Unknown";
-        switch(tphony.getNetworkType()) {
-        case TelephonyManager.NETWORK_TYPE_1xRTT: networktype = "1xRTT"; break;
-        case TelephonyManager.NETWORK_TYPE_CDMA: networktype = "CDMA"; break;
-        case TelephonyManager.NETWORK_TYPE_EDGE: networktype = "EDGE"; break;
-        case TelephonyManager.NETWORK_TYPE_EVDO_0: networktype = "EVDO_0"; break;
-        case TelephonyManager.NETWORK_TYPE_EVDO_A: networktype = "EVDO_A"; break;
-        case TelephonyManager.NETWORK_TYPE_GPRS: networktype = "GPRS"; break;
-        case TelephonyManager.NETWORK_TYPE_HSDPA: networktype = "HSDPA"; break;
-        case TelephonyManager.NETWORK_TYPE_HSPA: networktype = "HSPA"; break;
-        case TelephonyManager.NETWORK_TYPE_HSUPA: networktype = "HSUPA"; break;
-        case TelephonyManager.NETWORK_TYPE_UMTS: networktype = "UMTS"; break;
-        case TelephonyManager.NETWORK_TYPE_UNKNOWN: networktype = "UNKNOWN"; break;
+        switch (tphony.getNetworkType()) {
+        case TelephonyManager.NETWORK_TYPE_1xRTT:
+            networktype = "1xRTT";
+            break;
+        case TelephonyManager.NETWORK_TYPE_CDMA:
+            networktype = "CDMA";
+            break;
+        case TelephonyManager.NETWORK_TYPE_EDGE:
+            networktype = "EDGE";
+            break;
+        case TelephonyManager.NETWORK_TYPE_EVDO_0:
+            networktype = "EVDO_0";
+            break;
+        case TelephonyManager.NETWORK_TYPE_EVDO_A:
+            networktype = "EVDO_A";
+            break;
+        case TelephonyManager.NETWORK_TYPE_GPRS:
+            networktype = "GPRS";
+            break;
+        case TelephonyManager.NETWORK_TYPE_HSDPA:
+            networktype = "HSDPA";
+            break;
+        case TelephonyManager.NETWORK_TYPE_HSPA:
+            networktype = "HSPA";
+            break;
+        case TelephonyManager.NETWORK_TYPE_HSUPA:
+            networktype = "HSUPA";
+            break;
+        case TelephonyManager.NETWORK_TYPE_UMTS:
+            networktype = "UMTS";
+            break;
+        case TelephonyManager.NETWORK_TYPE_UNKNOWN:
+            networktype = "UNKNOWN";
+            break;
         }
-        
+
         String phonetype = "Unknown";
-        switch(tphony.getPhoneType()) {
-        case TelephonyManager.PHONE_TYPE_CDMA: phonetype = "cdma"; break;
-        case TelephonyManager.PHONE_TYPE_GSM: phonetype = "gsm"; break;
-        case TelephonyManager.PHONE_TYPE_NONE: phonetype = "none"; break;
+        switch (tphony.getPhoneType()) {
+        case TelephonyManager.PHONE_TYPE_CDMA:
+            phonetype = "cdma";
+            break;
+        case TelephonyManager.PHONE_TYPE_GSM:
+            phonetype = "gsm";
+            break;
+        case TelephonyManager.PHONE_TYPE_NONE:
+            phonetype = "none";
+            break;
         }
-        
+
         String simstate = "Unknown";
-        switch(tphony.getSimState()) {
-        case TelephonyManager.SIM_STATE_ABSENT: simstate = "Absent"; break;
-        case TelephonyManager.SIM_STATE_NETWORK_LOCKED: simstate = "Network Locked"; break;
-        case TelephonyManager.SIM_STATE_PIN_REQUIRED: simstate = "Pin Required"; break;
-        case TelephonyManager.SIM_STATE_PUK_REQUIRED: simstate = "Puk Required"; break;
-        case TelephonyManager.SIM_STATE_READY: simstate = "Ready"; break;
-        case TelephonyManager.SIM_STATE_UNKNOWN: simstate = "Unknown"; break;
+        switch (tphony.getSimState()) {
+        case TelephonyManager.SIM_STATE_ABSENT:
+            simstate = "Absent";
+            break;
+        case TelephonyManager.SIM_STATE_NETWORK_LOCKED:
+            simstate = "Network Locked";
+            break;
+        case TelephonyManager.SIM_STATE_PIN_REQUIRED:
+            simstate = "Pin Required";
+            break;
+        case TelephonyManager.SIM_STATE_PUK_REQUIRED:
+            simstate = "Puk Required";
+            break;
+        case TelephonyManager.SIM_STATE_READY:
+            simstate = "Ready";
+            break;
+        case TelephonyManager.SIM_STATE_UNKNOWN:
+            simstate = "Unknown";
+            break;
         }
-        
+
         model.addDetail("Call State", callstate);
         model.addDetail("Data Activity", dataactivity);
         model.addDetail("Data State", datastate);
