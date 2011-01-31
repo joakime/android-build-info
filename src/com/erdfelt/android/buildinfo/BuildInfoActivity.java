@@ -13,6 +13,7 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
@@ -34,6 +35,7 @@ public class BuildInfoActivity extends Activity {
         addBuildInfo();
         addSystemInfo();
         addDisplayInfo();
+        addTelephonyInfo();
 
         addSensorInfo("Accelerometer", Sensor.TYPE_ACCELEROMETER);
         addSensorInfo("Gyroscope", Sensor.TYPE_GYROSCOPE);
@@ -94,6 +96,89 @@ public class BuildInfoActivity extends Activity {
             model.add(new InfoDetail(prefix + "resolution", sensor.getResolution()));
             model.add(new InfoDetail(prefix + "maximum-range", sensor.getMaximumRange()));
         }
+    }
+    
+    private void addTelephonyInfo() {
+        model.addHeader("Telephony");
+
+        TelephonyManager tphony = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+
+        String callstate = "Unknown";
+        switch(tphony.getCallState()) {
+        case TelephonyManager.CALL_STATE_IDLE: callstate = "Idle"; break;
+        case TelephonyManager.CALL_STATE_OFFHOOK: callstate = "Off-Hook"; break;
+        case TelephonyManager.CALL_STATE_RINGING: callstate = "Ringing"; break;
+        }
+
+        
+        String dataactivity = "Unknown";
+        switch(tphony.getDataActivity()) {
+        case TelephonyManager.DATA_ACTIVITY_DORMANT: dataactivity = "Dormant"; break;
+        case TelephonyManager.DATA_ACTIVITY_IN: dataactivity = "In"; break;
+        case TelephonyManager.DATA_ACTIVITY_INOUT: dataactivity = "In-Out"; break;
+        case TelephonyManager.DATA_ACTIVITY_NONE: dataactivity = "None"; break;
+        case TelephonyManager.DATA_ACTIVITY_OUT: dataactivity = "Out"; break;
+        }
+        
+        String datastate = "Unknown";
+        switch(tphony.getDataState()) {
+        case TelephonyManager.DATA_CONNECTED: datastate = "Connected"; break;
+        case TelephonyManager.DATA_CONNECTING: datastate = "Connecting"; break;
+        case TelephonyManager.DATA_DISCONNECTED: datastate = "Disconnected"; break;
+        case TelephonyManager.DATA_SUSPENDED: datastate = "Suspended"; break;
+        }
+        
+        String networktype = "Unknown";
+        switch(tphony.getNetworkType()) {
+        case TelephonyManager.NETWORK_TYPE_1xRTT: networktype = "1xRTT"; break;
+        case TelephonyManager.NETWORK_TYPE_CDMA: networktype = "CDMA"; break;
+        case TelephonyManager.NETWORK_TYPE_EDGE: networktype = "EDGE"; break;
+        case TelephonyManager.NETWORK_TYPE_EVDO_0: networktype = "EVDO_0"; break;
+        case TelephonyManager.NETWORK_TYPE_EVDO_A: networktype = "EVDO_A"; break;
+        case TelephonyManager.NETWORK_TYPE_GPRS: networktype = "GPRS"; break;
+        case TelephonyManager.NETWORK_TYPE_HSDPA: networktype = "HSDPA"; break;
+        case TelephonyManager.NETWORK_TYPE_HSPA: networktype = "HSPA"; break;
+        case TelephonyManager.NETWORK_TYPE_HSUPA: networktype = "HSUPA"; break;
+        case TelephonyManager.NETWORK_TYPE_UMTS: networktype = "UMTS"; break;
+        case TelephonyManager.NETWORK_TYPE_UNKNOWN: networktype = "UNKNOWN"; break;
+        }
+        
+        String phonetype = "Unknown";
+        switch(tphony.getPhoneType()) {
+        case TelephonyManager.PHONE_TYPE_CDMA: phonetype = "cdma"; break;
+        case TelephonyManager.PHONE_TYPE_GSM: phonetype = "gsm"; break;
+        case TelephonyManager.PHONE_TYPE_NONE: phonetype = "none"; break;
+        }
+        
+        String simstate = "Unknown";
+        switch(tphony.getSimState()) {
+        case TelephonyManager.SIM_STATE_ABSENT: simstate = "Absent"; break;
+        case TelephonyManager.SIM_STATE_NETWORK_LOCKED: simstate = "Network Locked"; break;
+        case TelephonyManager.SIM_STATE_PIN_REQUIRED: simstate = "Pin Required"; break;
+        case TelephonyManager.SIM_STATE_PUK_REQUIRED: simstate = "Puk Required"; break;
+        case TelephonyManager.SIM_STATE_READY: simstate = "Ready"; break;
+        case TelephonyManager.SIM_STATE_UNKNOWN: simstate = "Unknown"; break;
+        }
+        
+        model.addDetail("Call State", callstate);
+        model.addDetail("Data Activity", dataactivity);
+        model.addDetail("Data State", datastate);
+        model.addDetail("Device ID", tphony.getDeviceId());
+        model.addDetail("Device Software Version", tphony.getDeviceSoftwareVersion());
+        model.addDetail("Line 1 Number", tphony.getLine1Number());
+        model.addDetail("Network Country Iso", tphony.getNetworkCountryIso());
+        model.addDetail("Network Operator", tphony.getNetworkOperator());
+        model.addDetail("Network Operator Name", tphony.getNetworkOperatorName());
+        model.addDetail("Network Type", networktype);
+        model.addDetail("Phone Type", phonetype);
+        model.addDetail("Sim Country ISO", tphony.getSimCountryIso());
+        model.addDetail("Sim Operator", tphony.getSimOperator());
+        model.addDetail("Sim Operator Name", tphony.getSimOperatorName());
+        model.addDetail("Sim Serial Number", tphony.getSimSerialNumber());
+        model.addDetail("Sim State", simstate);
+        model.addDetail("Subscriber ID", tphony.getSubscriberId());
+        model.addDetail("Voice Mail Alpha Tag", tphony.getVoiceMailAlphaTag());
+        model.addDetail("Voice Mail Number", tphony.getVoiceMailNumber());
     }
 
     private void addDisplayInfo() {
