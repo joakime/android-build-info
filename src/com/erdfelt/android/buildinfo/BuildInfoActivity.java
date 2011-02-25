@@ -20,6 +20,8 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -46,6 +48,7 @@ public class BuildInfoActivity extends Activity {
         addSystemInfo();
         addDisplayInfo();
         addTelephonyInfo();
+        addNetworkInfo();
         addSystemProperties();
 
         addSensorInfo("Accelerometer", Sensor.TYPE_ACCELEROMETER);
@@ -60,6 +63,46 @@ public class BuildInfoActivity extends Activity {
         ListView list = (ListView) findViewById(R.id.list);
         InfoModelAdapter adapter = new InfoModelAdapter(getLayoutInflater(), model);
         list.setAdapter(adapter);
+    }
+
+    private void addNetworkInfo() {
+        model.addHeader("Network");
+
+        ConnectivityManager connmgr = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        if(connmgr == null) {
+            model.addDetail("Service not available", "");
+            return;
+        }
+        
+        NetworkInfo infos[] = connmgr.getAllNetworkInfo();
+        
+        model.addDetail("Network Devices", "" + infos.length);
+        
+        for(NetworkInfo info: infos) {
+            String header = info.getTypeName();
+            if(info.getSubtype() > 0) {
+                header += " - " + info.getSubtypeName();
+            }
+            model.addHeader(header);
+            
+            model.addDetail("Type", String.valueOf(info.getType()) + " - " + info.getTypeName());
+            String st = "" + info.getSubtype();
+            if(info.getSubtype() > 0) {
+                st += " - " + info.getSubtypeName();
+            }
+            model.addDetail("Sub Type", st);
+            model.addDetail("Extra Info", info.getExtraInfo());
+            model.addDetail("State", info.getState().name());
+            model.addDetail("Reason", info.getReason());
+            
+            model.addDetail("Available", String.valueOf(info.isAvailable()));
+            model.addDetail("Connected", String.valueOf(info.isConnected()));
+            model.addDetail("Connected or Connecting", String.valueOf(info.isConnectedOrConnecting()));
+            model.addDetail("Failover", String.valueOf(info.isFailover()));
+            model.addDetail("Roaming", String.valueOf(info.isRoaming()));
+
+            model.addDetail("Detailed State", info.getDetailedState().name());
+        }
     }
 
     private void addSystemProperties() {
