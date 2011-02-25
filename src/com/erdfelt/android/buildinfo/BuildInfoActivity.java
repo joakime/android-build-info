@@ -22,6 +22,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -48,6 +51,7 @@ public class BuildInfoActivity extends Activity {
         addSystemInfo();
         addDisplayInfo();
         addTelephonyInfo();
+        addWifiInfo();
         addNetworkInfo();
         addSystemProperties();
 
@@ -65,36 +69,71 @@ public class BuildInfoActivity extends Activity {
         list.setAdapter(adapter);
     }
 
+    private void addWifiInfo() {
+        model.addHeader("Wifi");
+
+        WifiManager wifimgr = (WifiManager) getSystemService(WIFI_SERVICE);
+        if (wifimgr == null) {
+            model.addDetail("Service not available", "");
+        }
+
+        model.addDetail("Enabled", String.valueOf(wifimgr.isWifiEnabled()));
+        WifiInfo wi = wifimgr.getConnectionInfo();
+        if (wi == null) {
+            model.addDetail("MAC Address", "n/a (no wifi active)");
+        } else {
+            model.addDetail("MAC Address", wi.getMacAddress());
+        }
+        List<WifiConfiguration> wconfs = wifimgr.getConfiguredNetworks();
+        model.addDetail("Configurations", String.valueOf(wconfs.size()));
+        int n = 0;
+        for (WifiConfiguration wc : wconfs) {
+            String state = "UNKNOWN";
+            switch (wc.status) {
+            case WifiConfiguration.Status.CURRENT:
+                state = "current *";
+                break;
+            case WifiConfiguration.Status.DISABLED:
+                state = "disabled";
+                break;
+            case WifiConfiguration.Status.ENABLED:
+                state = "enabled";
+                break;
+            }
+            model.addDetail(String.format("Config %d", n++), String.format("%s - %s", wc.SSID, state));
+        }
+    }
+
     private void addNetworkInfo() {
         model.addHeader("Network");
 
         ConnectivityManager connmgr = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        if(connmgr == null) {
+        if (connmgr == null) {
             model.addDetail("Service not available", "");
             return;
         }
-        
+
         NetworkInfo infos[] = connmgr.getAllNetworkInfo();
-        
+
         model.addDetail("Network Devices", "" + infos.length);
-        
-        for(NetworkInfo info: infos) {
+
+        for (NetworkInfo info : infos) {
             String header = info.getTypeName();
-            if(info.getSubtype() > 0) {
+            if (info.getSubtype() > 0) {
                 header += " - " + info.getSubtypeName();
             }
             model.addHeader(header);
-            
+
             model.addDetail("Type", String.valueOf(info.getType()) + " - " + info.getTypeName());
             String st = "" + info.getSubtype();
-            if(info.getSubtype() > 0) {
+            if (info.getSubtype() > 0) {
                 st += " - " + info.getSubtypeName();
             }
             model.addDetail("Sub Type", st);
             model.addDetail("Extra Info", info.getExtraInfo());
             model.addDetail("State", info.getState().name());
             model.addDetail("Reason", info.getReason());
-            
+
             model.addDetail("Available", String.valueOf(info.isAvailable()));
             model.addDetail("Connected", String.valueOf(info.isConnected()));
             model.addDetail("Connected or Connecting", String.valueOf(info.isConnectedOrConnecting()));
