@@ -1,4 +1,4 @@
-package com.erdfelt.android.buildinfo;
+package com.solshen.buildinfo;
 
 public interface InfoItem {
     public int getViewType();

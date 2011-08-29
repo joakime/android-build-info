@@ -1,4 +1,4 @@
-package com.erdfelt.android.buildinfo;
+package com.solshen.buildinfo;
 
 public class InfoHeader implements InfoItem {
     public static final int VIEW_TYPE = 1;

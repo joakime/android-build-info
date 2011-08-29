@@ -1,4 +1,4 @@
-package com.erdfelt.android.buildinfo;
+package com.solshen.buildinfo;
 
 import java.util.ArrayList;
 
