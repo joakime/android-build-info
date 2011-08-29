@@ -35,15 +35,6 @@
         <version>2.8.3</version>
         <extensions>true</extensions>
         <executions>
-          <!-- 
-          <execution> 
-            <id>startEmulator</id> 
-            <phase>initialize</phase> 
-            <goals>
-              <goal>emulator-start</goal>
-            </goals>
-          </execution>
-           -->
           <execution>
             <id>alignApk</id>
             <phase>package</phase>
@@ -56,12 +47,6 @@
           <sdk>
             <platform>8</platform>
           </sdk>
-          <!--
-          <emulator>
-            <avd>16</avd>
-            <wait>10000</wait>
-          </emulator>
-           -->
           <zipalign>
             <verbose>true</verbose>
           </zipalign>
@@ -71,4 +56,57 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>sign</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jarsigner-plugin</artifactId>
+            <version>1.2</version>
+            <executions>
+              <execution>
+                <id>signing</id>
+                <goals>
+                  <goal>sign</goal>
+                  <goal>verify</goal>
+                </goals>
+                <phase>package</phase>
+                <inherited>true</inherited>
+                <configuration>
+                  <removeExistingSignatures>true</removeExistingSignatures>
+                  <archiveDirectory/>
+                  <includes>
+                    <include>${project.build.directory}/${project.build.finalName}.apk</include>
+                  </includes>
+                  <keystore>${solshen-sign-keystore}</keystore>
+                  <alias>${solshen-sign-alias}</alias>
+                  <keypass>${solshen-sign-keypass}</keypass>
+                  <storepass>${solshen-sign-storepass}</storepass>
+                  <verbose>true</verbose>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+            <artifactId>maven-android-plugin</artifactId>
+            <inherited>true</inherited>
+            <configuration>
+              <sign>
+                <debug>false</debug>
+              </sign>
+              <zipalign>
+                <verbose>true</verbose>
+                <inputApk>${project.build.directory}/${project.build.finalName}.apk</inputApk>
+                <outputApk>${project.build.directory}/${project.build.finalName}-signed-aligned.apk
+                </outputApk>
+              </zipalign>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
